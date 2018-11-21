@@ -53,7 +53,7 @@ class BokehTableComponent():
         return self.data_table
     
     def getSelected(self):
-        return indices
+        return self.source.selected.indices
 
     def doRemoveIndices(self,selected_index):
         for k in self.data.keys():
@@ -69,16 +69,12 @@ class BokehTableComponent():
         return False
 
     def removeSelected(self):
-        print('0')
         if len(self.source.selected.indices) == 0:
             self.source.selected.indices = []
             return
         selected_index = self.source.selected.indices[0]
-        print('1')
         self.removeIndices(selected_index)
-        print('2')
         self.doDataUpdate()
-        print('3')
         self.setDataAndRefresh(self.data)
         self.source.selected.indices = []
     
@@ -87,6 +83,10 @@ class BokehTableComponent():
     def handle_select_callback(self,attr, old, new):
         indices = [self.data[self.id_field][i] for i in new ]
         self.source.selected.indices = new
+        self.do_handle_select(attr,old,new)
+
+    def do_handle_select(self,attr,old,new):
+        pass
     
     def Class(self):
         classobj= globals()[self.__class__.__name__]
@@ -110,16 +110,6 @@ class BokehTableComponent():
         id_field = 'theid'
         return [data,id_field]
     
-    __instance = None
-    #@staticmethod
-    #def handle_select_global(attr, old, new):
-    #    BokehTableComponent.Instance().handle_select_callback(attr, old, new)
-        
-    #@staticmethod
-    #def Instance():
-    #    if BokehTableComponent.__instance == None:
-    #        BokehTableComponent.__instance = BokehTableComponent()
-    #    return BokehTableComponent.__instance
 
 
 class BokehControl():
@@ -153,12 +143,31 @@ class BokehSelect(BokehControl):
         raise Exception ("Should not be creating a general button")
 
 
+class QueryTableComponent(BokehTableComponent):
+    def initData(self):
+        self.pi = self._settings['buffered_query_interface']
+        data = self.pi.QueryData()
+        id_field = self._settings['id_field']
+        return [data,id_field]
+    
+    __instance = None
+    
+    def doRemoveIndices(self,index):
+        idval = self.data[self.id_field][index]
+        self.pi.DoAction(action_id = 'kill', query={'key':self.id_field,'value':idval} )
+        return True
+
+    def doDataUpdate(self):
+        self.data = self.pi.QueryData()
+        return True    
+
+
 
 import pandas as pd
 
 class BufferedQueryInterface():
     '''
-    BokehTableComponent ----> BufferedQueryInterface
+    QueryTableComponent(BokehTableComponent) ----> BufferedQueryInterface
     The buffered Query Interface can be used by a BokehTableComponent to handle data. The BokehTable handles events, and front-end concerns. The Query Interface handles data, and all query concerns. It is possible to inherit from, and oveerride the Buffered Query Interface to support a wide variety of queries. These can be to MongoDB, to SQLite, to flat files.
     '''
     def __init__(self):
@@ -188,7 +197,6 @@ class BufferedQueryInterface():
         self.load_data_buffer()
         indices = self.QueryIndices(query)
         if indices:
-            print (indices)
             ret_data = {}
             for k in self.data:
                 ret_data[k] = [self.data[k][i] for i in indices]
@@ -221,7 +229,6 @@ class BufferedQueryInterface():
     
     
     def action_kill(self,ids):
-        print('Requested to kill ', len(ids))
         for k in self.data.keys(): 
             for selected_index in reversed(ids):
                 self.data[k].pop(selected_index)

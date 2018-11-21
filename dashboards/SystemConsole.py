@@ -17,60 +17,6 @@ import pandas_datareader as pdr
 from bokeh.plotting import figure,show,output_file
 from BokehComponents import *
 
-class ProcessTableComponent(BokehTableComponent):
-    def initData(self):
-        data = {
-            'pid':['pid_'+str(i) for i in range(10)],
-            'job':['jobStatrer.pyc ' for i in range(10)],
-            }
-        id_field = 'pid'
-        return [data,id_field]
-    
-    #__instance = None
-    #@staticmethod
-    #def handle_select_static(attr, old, new):
-    #    ProcessTableComponent.Instance().handle_select_callback(attr, old, new)
-        
-    #@staticmethod
-    #def Instance():
-    #    if ProcessTableComponent.__instance == None:
-    #        ProcessTableComponent.__instance = ProcessTableComponent()
-    #    return ProcessTableComponent.__instance
-
-class ExperimentTableComponent(BokehTableComponent):
-    def initData(self):
-        data = {
-            'eid':['eid_'+str(i) for i in range(10)],
-            'job':['experiment ' for i in range(10)],
-            'status':['running ' for i in range(10)],
-            }
-        id_field = 'eid'
-        return [data,id_field]
-    
-    #__instance = None
-    #@staticmethod
-    #def handle_select_static(attr, old, new):
-    #    ExperimentTableComponent.Instance().handle_select_callback(attr, old, new)
-    #    
-    #@staticmethod
-    #def Instance():
-    #    if ExperimentTableComponent.__instance == None:
-    #        ExperimentTableComponent.__instance = ExperimentTableComponent()
-    #    return ExperimentTableComponent.__instance
-
-
-class KillButton(BokehButton):
-    def handle_click(self,event):
-        print("KILL EVENT")
-        for t in self._settings['tables_to_kill']:
-            t.removeSelected()
-
-
-class ShowButton(BokehButton):
-    def handle_click(self,event):
-        print("Show EVENT")
-
-
 
 class TimeseriesGraphic(BokehControl):
     
