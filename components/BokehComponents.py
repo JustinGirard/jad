@@ -53,7 +53,8 @@ class BokehTableComponent():
         return self.data_table
     
     def getSelected(self):
-        return self.source.selected.indices
+        s = self.source.selected.indices
+        return s
 
     def doRemoveIndices(self,selected_index):
         for k in self.data.keys():
@@ -69,7 +70,16 @@ class BokehTableComponent():
         return False
 
     def removeSelected(self):
-        if len(self.source.selected.indices) == 0:
+        try: 
+            l = len(self.source.selected.indices)
+        except:
+            print("CRITICAL ERROR in removeSelected")
+            print(self._settings)
+            display(self.source)
+            display(self.source.selected)
+            display(self.source.selected.indices)
+
+        if l == 0:
             self.source.selected.indices = []
             return
         selected_index = self.source.selected.indices[0]
@@ -77,10 +87,11 @@ class BokehTableComponent():
         self.doDataUpdate()
         self.setDataAndRefresh(self.data)
         self.source.selected.indices = []
-    
+
     ## Event Handles
     # Call me when you get a selection event on the resulting table
     def handle_select_callback(self,attr, old, new):
+
         indices = [self.data[self.id_field][i] for i in new ]
         self.source.selected.indices = new
         self.do_handle_select(attr,old,new)
