@@ -38,6 +38,8 @@ class BokehTableComponent():
     
     def getBokehComponent(self):
         ## First, we construct the data source
+        if self.data is None:
+            self.data = {}
         source = ColumnDataSource(self.data)
         source.selected.on_change('indices', self.getCallback())        
         #source.on_change('selected', callback_in)
@@ -189,6 +191,12 @@ class BufferedQueryInterface():
         Find the indices that result from executing any query.
         '''
         self.load_data_buffer()
+
+        L = list(self.data.keys())
+
+        if len(L)==0:
+            return []
+
         if query:
             if 'key' in query and 'value' in query:
                 lst = self.data[query['key']]

@@ -16,7 +16,88 @@ import pandas as pd
 import pandas_datareader as pdr
 from bokeh.plotting import figure,show,output_file
 from BokehComponents import *
+try:
+    from jef.experiment_manager import experiment_manager
+except:
+    from jef.jef.experiment_manager import experiment_manager
+from conf.conf import conf
 
+class ProcessQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        if hasattr(self, 'data'):
+            pass
+        else:
+            self.data = {
+                'process_id':[str(i) for i in range(100)],
+                'file':['process_name' for i in range(100)],
+                'memory':[ i%10+10 for i in range(100)],
+                'cpu':[ i%5+10 for i in range(100)],
+                }
+            self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for k in self.data.keys(): 
+            for selected_index in reversed(ids):
+                self.data[k].pop(selected_index)
+
+class ExperimentManagerInterface:
+    
+    _em = None
+    
+    @staticmethod
+    def getDataGrid(type_id='experiment',id_field='eid'):
+        if ExperimentManagerInterface._em is None:
+            ExperimentManagerInterface._em=experiment_manager( mongo_server = conf.get( 'jef_mongo_host', '54.214.220.236' ),
+                                    port = conf.get( 'jef_mongo_port', 27017 ),
+                                    mongo_db = conf.get( 'jef_mongo_db', 'fleetRover' ),
+                                    username = conf.get( 'jef_mongo_username', 'pax_user' ),
+                                    password = conf.get( 'jef_mongo_password', 'paxuser43' ),
+                                    authSource = conf.get( 'jef_mongo_authSource', 'fleetRover' ) )
+
+                            
+        df=ExperimentManagerInterface._em.listexpts(status=['running'],query={'settings.experiment_type':type_id})
+        L = len(df.index)
+        #print(type_id)
+        #print(L)
+        #print(df.to_string())
+
+        if L==0:
+            return {}
+        data = {
+                id_field:[ df.loc[i,'experiment_id'] for i in range(L)],
+                'name':[ df.loc[i, 'name'] for i in range(L)],
+                'status':['running ' for i in range(L)],
+                'duration':[0 for i in range(L)],
+                }                   
+        return data
+        
+class ExperimentQuery(BufferedQueryInterface):
+ 
+    def load_data_buffer(self):
+ 
+        self.data = ExperimentManagerInterface.getDataGrid(type_id="experiment",id_field="eid")    
+        self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        print(ids)
+        print(self.data)
+        for k in self.data.keys(): 
+            for selected_index in reversed(ids):
+                self.data[k].pop(selected_index)
+
+                
+class AlgorithmQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        
+        self.data = ExperimentManagerInterface.getDataGrid(type_id="algorithm",id_field="aid")    
+        self.actions = {'kill':self.action_kill} 
+    
+    def action_kill(self,ids):
+        print(ids)
+        print(self.data)
+        for k in self.data.keys(): 
+            for selected_index in reversed(ids):                
+                self.data[k].pop(selected_index)     
 
 class TimeseriesGraphic(BokehControl):
     
