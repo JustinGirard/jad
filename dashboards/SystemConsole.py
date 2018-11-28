@@ -45,7 +45,7 @@ class ExperimentManagerInterface:
     _em = None
     
     @staticmethod
-    def getDataGrid(type_id='experiment',id_field='eid'):
+    def instantiateEM():
         if ExperimentManagerInterface._em is None:
             ExperimentManagerInterface._em=experiment_manager( mongo_server = conf.get( 'jef_mongo_host', '54.214.220.236' ),
                                     port = conf.get( 'jef_mongo_port', 27017 ),
@@ -53,6 +53,16 @@ class ExperimentManagerInterface:
                                     username = conf.get( 'jef_mongo_username', 'pax_user' ),
                                     password = conf.get( 'jef_mongo_password', 'paxuser43' ),
                                     authSource = conf.get( 'jef_mongo_authSource', 'fleetRover' ) )
+
+    @staticmethod
+    def kill(experiment_id=None):
+        ExperimentManagerInterface.instantiateEM()
+        print("A kill request was received for experiment_id " + experiment_id)
+        ExperimentManagerInterface._em.kill(experiment_id=experiment_id)
+
+    @staticmethod
+    def getDataGrid(type_id='experiment',id_field='eid'):
+        ExperimentManagerInterface.instantiateEM()
 
         query = None
         if type_id == 'other':
@@ -76,19 +86,16 @@ class ExperimentManagerInterface:
                 }               
         return data
         
+
 class ExperimentQuery(BufferedQueryInterface):
  
     def load_data_buffer(self):
- 
         self.data = ExperimentManagerInterface.getDataGrid(type_id="experiment",id_field="eid")    
         self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
-        print(ids)
-        print(self.data)
-        for k in self.data.keys(): 
-            for selected_index in reversed(ids):
-                self.data[k].pop(selected_index)
+        for selected_index in ids:
+            ExperimentManagerInterface.kill(experiment_id=self.data['eid'][selected_index])      
 
                 
 class AlgorithmQuery(BufferedQueryInterface):
@@ -102,11 +109,11 @@ class AlgorithmQuery(BufferedQueryInterface):
         self.actions = {'kill':self.action_kill} 
     
     def action_kill(self,ids):
-        print(ids)
-        print(self.data)
-        for k in self.data.keys(): 
-            for selected_index in reversed(ids):                
-                self.data[k].pop(selected_index)     
+        for selected_index in ids:
+            ExperimentManagerInterface.kill(experiment_id=self.data['aid'][selected_index]) 
+        #for k in self.data.keys(): 
+        #    for selected_index in reversed(ids):                
+        #        self.data[k].pop(selected_index)     
 
 class TimeseriesGraphic(BokehControl):
     
