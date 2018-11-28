@@ -54,21 +54,26 @@ class ExperimentManagerInterface:
                                     password = conf.get( 'jef_mongo_password', 'paxuser43' ),
                                     authSource = conf.get( 'jef_mongo_authSource', 'fleetRover' ) )
 
-                            
-        df=ExperimentManagerInterface._em.listexpts(status=['running'],query={'settings.experiment_type':type_id})
+        query = None
+        if type_id == 'other':
+            query = { '$and': [ {'settings.experiment_type':{'$ne':'experiment'}},
+                                {'settings.experiment_type':{'$ne':'algorithm'}} ] }
+        else:        
+            query = {'settings.experiment_type':type_id}         
+        df=ExperimentManagerInterface._em.listexpts(status=['running'],query=query)
         L = len(df.index)
         #print(type_id)
         #print(L)
         #print(df.to_string())
 
-        if L==0:
-            return {}
+        #if L==0:
+        #    return {}
         data = {
                 id_field:[ df.loc[i,'experiment_id'] for i in range(L)],
                 'name':[ df.loc[i, 'name'] for i in range(L)],
                 'status':['running ' for i in range(L)],
                 'duration':[0 for i in range(L)],
-                }                   
+                }               
         return data
         
 class ExperimentQuery(BufferedQueryInterface):
@@ -88,8 +93,12 @@ class ExperimentQuery(BufferedQueryInterface):
                 
 class AlgorithmQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        
-        self.data = ExperimentManagerInterface.getDataGrid(type_id="algorithm",id_field="aid")    
+        data1 = ExperimentManagerInterface.getDataGrid(type_id="algorithm",id_field="aid")
+        data2 = ExperimentManagerInterface.getDataGrid(type_id="other",id_field="aid") 
+        self.data = {} 
+        for key in data1:
+            self.data[key] = data1[key]+data2[key]
+    
         self.actions = {'kill':self.action_kill} 
     
     def action_kill(self,ids):
