@@ -21,6 +21,8 @@ try:
 except:
     from jef.jef.experiment_manager import experiment_manager
 from conf.conf import conf
+from bson import ObjectId
+from pymongo import MongoClient
 
 class ProcessQuery(BufferedQueryInterface):
     def load_data_buffer(self):
@@ -85,7 +87,7 @@ class ExperimentManagerInterface:
                 'duration':[0 for i in range(L)],
                 }               
         return data
-        
+
 
 class ExperimentQuery(BufferedQueryInterface):
  
@@ -114,6 +116,104 @@ class AlgorithmQuery(BufferedQueryInterface):
         #for k in self.data.keys(): 
         #    for selected_index in reversed(ids):                
         #        self.data[k].pop(selected_index)     
+
+class DataBaseQuery:
+    
+    _client = MongoClient( host = conf.get( "advice_mongo_host", "54.184.199.101" ), 
+                           port = conf.get( "advice_mongo_port", 27017 ),
+                           username = conf.get( "advice_mongo_username", "pax_user" ),
+                           password = conf.get( "advice_mongo_password", "paxuser43" ),
+                           authSource = conf.get( "advice_mongo_authSource", "fleetRover" ) )
+    
+    @staticmethod
+    def getData( db, collection, keys ):
+        _db = DataBaseQuery._client[ db ]
+        _collection = _db[ collection ]
+        result = _collection.find()
+        data = {}
+        for key in keys:
+            data[key]=[]
+        for doc in result: 
+            if doc:
+                for key in keys:
+                    if key in doc:
+                        data[key].append(repr(doc[key])) 
+                    else:
+                        data[key].append(None)
+        return data
+    
+    @staticmethod
+    def delete( db, collection, object_id ):
+        _db = DataBaseQuery._client[ db ]
+        _collection = _db[ collection ]
+        _deleted_collection = _db['deleted']
+        object_id = object_id.lstrip("ObjectId")
+        object_id = object_id.strip("(')")
+        doc = _collection.find_one_and_delete({'_id':ObjectId(object_id)})
+        _deleted_collection.insert_one({"db":db,"collection":collection,"doc":doc})
+        
+class UserQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        if hasattr(self, 'data'):
+            pass
+        else:
+            self.data = DataBaseQuery.getData("advice","users",['email','name','date','active','test','_id'])                        
+            self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for selected_index in ids:
+            DataBaseQuery.delete('advice','users',object_id=self.data['_id'][selected_index]) 
+
+class EmailQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+                
+        if hasattr(self, 'data'):
+            pass
+        else:
+            self.data = DataBaseQuery('advice','message',['email','date','_id'])
+            self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for selected_index in ids:
+            DataBaseQuery.delete('advice','message',object_id=self.data['_id'][selected_index]) 
+                
+class SignalQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        if hasattr(self, 'data'):
+            pass
+        else:
+            self.data = DataBaseQuery.getData('advice','signals',['UID', 'BID', 'MID', 'date', 'used', 'week','_id'])   
+            self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for selected_index in ids:
+            DataBaseQuery.delete('advice','signals',object_id=self.data['_id'][selected_index])  
+                                
+class BracketQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        if hasattr(self, 'data'):
+            pass
+        else:   
+            self.data = DataBaseQuery.getData('advice','bracket',['sec','date','sell','high','low','conf','pl','used','week','_id']) 
+            self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for selected_index in ids:
+            DataBaseQuery.delete('advice','bracket',object_id=self.data['_id'][selected_index])  
+
+class AutotradeQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        if hasattr(self, 'data'):
+            pass
+        else:
+            self.data = DataBaseQuery.getData('advice','autotrades',[ 'experiment_id', 'security', 'high_sell', 'bottom_sell', 'time_sell', 'sharesAmount', 'amount', 'purchase_date', 'cost', 'last_price','_id'])
+            self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for selected_index in ids:
+            DataBaseQuery.delete('advice','autotrades',object_id=self.data['_id'][selected_index])                   
+                
+                
 
 class TimeseriesGraphic(BokehControl):
     
