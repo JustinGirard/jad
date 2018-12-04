@@ -147,72 +147,59 @@ class DataBaseQuery:
         _db = DataBaseQuery._client[ db ]
         _collection = _db[ collection ]
         _deleted_collection = _db['deleted']
-        object_id = object_id.lstrip("ObjectId")
-        object_id = object_id.strip("(')")
+        object_id = object_id.lstrip("ObjectId").strip("(')")
         doc = _collection.find_one_and_delete({'_id':ObjectId(object_id)})
-        _deleted_collection.insert_one({"db":db,"collection":collection,"doc":doc})
+        _deleted_collection.insert_one(doc)
         
 class UserQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        if hasattr(self, 'data'):
-            pass
-        else:
-            self.data = DataBaseQuery.getData("advice","users",['email','name','date','active','test','_id'])                        
-            self.actions = {'kill':self.action_kill}
+        self.data = DataBaseQuery.getData("advice","users",['email','name','date','active','test','_id'])                        
+        self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
         for selected_index in ids:
             DataBaseQuery.delete('advice','users',object_id=self.data['_id'][selected_index]) 
+        self.load_data_buffer()
 
 class EmailQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-                
-        if hasattr(self, 'data'):
-            pass
-        else:
-            self.data = DataBaseQuery('advice','message',['email','date','_id'])
-            self.actions = {'kill':self.action_kill}
+        self.data = DataBaseQuery('advice','message',['email','date','_id'])
+        self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
         for selected_index in ids:
             DataBaseQuery.delete('advice','message',object_id=self.data['_id'][selected_index]) 
+        self.load_data_buffer()
                 
 class SignalQuery(BufferedQueryInterface):
-    def load_data_buffer(self):
-        if hasattr(self, 'data'):
-            pass
-        else:
-            self.data = DataBaseQuery.getData('advice','signals',['UID', 'BID', 'MID', 'date', 'used', 'week','_id'])   
-            self.actions = {'kill':self.action_kill}
+    def load_data_buffer(self):    
+        self.data = DataBaseQuery.getData('advice','signals',['UID', 'BID', 'MID', 'date', 'used', 'week','_id'])   
+        self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
         for selected_index in ids:
-            DataBaseQuery.delete('advice','signals',object_id=self.data['_id'][selected_index])  
+            DataBaseQuery.delete('advice','signals',object_id=self.data['_id'][selected_index]) 
+        self.load_data_buffer() 
                                 
 class BracketQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        if hasattr(self, 'data'):
-            pass
-        else:   
-            self.data = DataBaseQuery.getData('advice','bracket',['sec','date','sell','high','low','conf','pl','used','week','_id']) 
-            self.actions = {'kill':self.action_kill}
-    
+        self.data = DataBaseQuery.getData('advice','bracket',['sec','date','sell','high','low','conf','pl','used','week','_id']) 
+        self.actions = {'kill':self.action_kill}    
+
     def action_kill(self,ids):
         for selected_index in ids:
             DataBaseQuery.delete('advice','bracket',object_id=self.data['_id'][selected_index])  
+        self.load_data_buffer()
 
 class AutotradeQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        if hasattr(self, 'data'):
-            pass
-        else:
-            self.data = DataBaseQuery.getData('advice','autotrades',[ 'experiment_id', 'security', 'high_sell', 'bottom_sell', 'time_sell', 'sharesAmount', 'amount', 'purchase_date', 'cost', 'last_price','_id'])
-            self.actions = {'kill':self.action_kill}
+        self.data = DataBaseQuery.getData('advice','autotrades',[ 'experiment_id', 'security', 'high_sell', 'bottom_sell', 'time_sell', 'sharesAmount', 'amount', 'purchase_date', 'cost', 'last_price','_id'])
+        self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
         for selected_index in ids:
             DataBaseQuery.delete('advice','autotrades',object_id=self.data['_id'][selected_index])                   
-                
+        self.load_data_buffer()                
                 
 
 class TimeseriesGraphic(BokehControl):

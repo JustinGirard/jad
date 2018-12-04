@@ -47,7 +47,7 @@ class BokehTableComponent():
         for k in self.data.keys():
             columns.append(TableColumn(field=k, title=k))
             #TableColumn(field="dates", title="StartDate", formatter=DateFormatter()),
-        data_table = DataTable(source=source, columns=columns, width=300, height=280)
+        data_table = DataTable(source=source, columns=columns, width=900, height=280)
         
         # assign class variables
         self.data_table = data_table
