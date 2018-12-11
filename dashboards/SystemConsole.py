@@ -127,13 +127,18 @@ class DataBaseQuery:
                            authSource = conf.get( "advice_mongo_authSource", "fleetRover" ) )
     
     @staticmethod
-    def getData( db, collection, keys, n=None, sort_key=None ):
+    def getData( db, collection, keys, n=None, sort_key=None, since_yesterday=None ):
         _db = DataBaseQuery._client[ db ]
         _collection = _db[ collection ]
+        query = {}
+        if since_yesterday:
+            today = datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)
+            yesterday = today - timedelta(days=1)            
+            query = { since_yesterday :{'$gte':yesterday} }
         if n is None or sort_key is None:
-            result = _collection.find()
+            result = _collection.find(filter=query)
         else:
-            result = _collection.find().sort(sort_key,pymongo.DESCENDING).limit(n)
+            result = _collection.find(filter=query).sort(sort_key,pymongo.DESCENDING).limit(n)
         data = {}
         for key in keys:
             data[key]=[]
@@ -188,7 +193,7 @@ class EmailQuery(BufferedQueryInterface):
                 
 class SignalQuery(BufferedQueryInterface):
     def load_data_buffer(self):    
-        self.data = DataBaseQuery.getData('advice','signals',['UID', 'BID', 'MID', 'date', 'used', 'week','_id'])   
+        self.data = DataBaseQuery.getData('advice','signals',['UID', 'BID', 'MID', 'date', 'used', 'week', 'purchase_date','_id'],since_yesterday='purchase_date')   
         self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
@@ -198,7 +203,7 @@ class SignalQuery(BufferedQueryInterface):
                                 
 class BracketQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        self.data = DataBaseQuery.getData('advice','bracket',['sec','date','sell','high','low','conf','pl','used','week','_id']) 
+        self.data = DataBaseQuery.getData('advice','bracket',['sec','date','sell','high','low','conf','pl','used','week','_id'],since_yesterday='date') 
         self.actions = {'kill':self.action_kill}    
 
     def action_kill(self,ids):
