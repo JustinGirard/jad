@@ -22,6 +22,7 @@ except:
     from jef.jef.experiment_manager import experiment_manager
 from conf.conf import conf
 from bson import ObjectId
+import pymongo
 from pymongo import MongoClient
 
 class ProcessQuery(BufferedQueryInterface):
@@ -126,10 +127,13 @@ class DataBaseQuery:
                            authSource = conf.get( "advice_mongo_authSource", "fleetRover" ) )
     
     @staticmethod
-    def getData( db, collection, keys ):
+    def getData( db, collection, keys, n=None, sort_key=None ):
         _db = DataBaseQuery._client[ db ]
         _collection = _db[ collection ]
-        result = _collection.find()
+        if n is None or sort_key is None:
+            result = _collection.find()
+        else:
+            result = _collection.find().sort(sort_key,pymongo.DESCENDING).limit(n)
         data = {}
         for key in keys:
             data[key]=[]
@@ -137,11 +141,11 @@ class DataBaseQuery:
             if doc:
                 for key in keys:
                     if key in doc:
-                        data[key].append(repr(doc[key])) 
+                        data[key].append(str(doc[key])) 
                     else:
                         data[key].append(None)
         return data
-    
+
     @staticmethod
     def delete( db, collection, object_id ):
         _db = DataBaseQuery._client[ db ]
@@ -161,9 +165,20 @@ class UserQuery(BufferedQueryInterface):
             DataBaseQuery.delete('advice','users',object_id=self.data['_id'][selected_index]) 
         self.load_data_buffer()
 
+class PoolQuery(BufferedQueryInterface):
+    def load_data_buffer(self):
+        self.data = DataBaseQuery.getData("advice","pool",['UID','secs','_id'])                        
+        self.actions = {'kill':self.action_kill}
+    
+    def action_kill(self,ids):
+        for selected_index in ids:
+            DataBaseQuery.delete('advice','pool',object_id=self.data['_id'][selected_index]) 
+        self.load_data_buffer()
+
+
 class EmailQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        self.data = DataBaseQuery('advice','message',['email','date','_id'])
+        self.data = DataBaseQuery.getData('advice','message',['email','date','_id'])
         self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
@@ -193,7 +208,8 @@ class BracketQuery(BufferedQueryInterface):
 
 class AutotradeQuery(BufferedQueryInterface):
     def load_data_buffer(self):
-        self.data = DataBaseQuery.getData('advice','autotrades',[ 'experiment_id', 'security', 'high_sell', 'bottom_sell', 'time_sell', 'sharesAmount', 'amount', 'purchase_date', 'cost', 'last_price','_id'])
+        autotrade_limit = conf.get('autotrade_limit',300)
+        self.data = DataBaseQuery.getData('advice','autotrades',[ 'experiment_id', 'security', 'high_sell', 'bottom_sell', 'time_sell', 'sharesAmount', 'amount', 'purchase_date', 'cost', 'last_price','_id'],autotrade_limit,'purchase_date')
         self.actions = {'kill':self.action_kill}
     
     def action_kill(self,ids):
