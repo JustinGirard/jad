@@ -163,7 +163,7 @@ class JobStarterQuery(BufferedQueryInterface):
             InstanceCount=1,
             Type='one-time',
             LaunchSpecification={
-                'ImageId': 'ami-03901e3d5432761c6',
+                'ImageId': 'ami-000fd9a518cfab156',
                 'KeyName': 'default',
                 'SecurityGroups': ['default'],
                 'InstanceType': 't2.large',

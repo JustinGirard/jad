@@ -83,6 +83,7 @@ class AlgorithmQuery(BufferedQueryInterface):
             'experiment_id':[],
             'last_contacted':[],
             'name':[],
+            'etype':[],
             'status':[],
             'auto_restart':[],
             'expmpde':[],
@@ -90,6 +91,7 @@ class AlgorithmQuery(BufferedQueryInterface):
         #self.registerAction('addOrder' ,OrderQuery.addOrder, "Add an order into the simulation", "None")
         #self.registerAction('closeOrder' ,OrderQuery.closeOrder, "Close out the position of an order",['TYPE_INDICES'])
         self.registerId('experiment_id',"The field that uniquely describes an experiment")
+        self.registerFilter(filter_id='etype',default=None,description="The type of experiment")
         self.em = self._settings['market_data'].getEm()
         self.registerAction('append',AlgorithmQuery.appendNextAction)
         self.registerAction('halt',AlgorithmQuery.deleteAction)
@@ -192,10 +194,14 @@ class AlgorithmQuery(BufferedQueryInterface):
         
         #df = em.listexpts(status=['running'])     
         dfs = []
+        experimentType =  self.get_filter_value('etype')
 
         # Running
         # -------
         df = self.em.listexpts(status=['running'])
+        for k in keys:
+            if k not in df.columns:
+                df[k] = ""
         df = df[keys]
         dfs.append(df)
         
@@ -203,6 +209,10 @@ class AlgorithmQuery(BufferedQueryInterface):
         # -------
         df = self.em.listexpts(query={'auto_restart':True, 
                                  'status':{'$in':['cleared','crashed','halted','killed','completed']}})
+        
+        for k in keys:
+            if k not in df.columns:
+                df[k] = ""
         if len(list(df.index)) > 0:
             df['last_contacted'] = "null"
             df['auto_restart'] = True
@@ -212,6 +222,9 @@ class AlgorithmQuery(BufferedQueryInterface):
         # Queued
         # -------
         df = self.em.listqueue()
+        for k in keys:
+            if k not in df.columns:
+                df[k] = ""
         if len(list(df.index)) > 0:
             df['status'] = "queued"
             df['last_contacted'] = "null"
@@ -258,7 +271,7 @@ class AlgorithmQuery(BufferedQueryInterface):
         
         #
         # Properties saved by the algorithm itself
-        prop_keys = ['memory_use_mb','value_total','value_pl','current_date','expmode']
+        prop_keys = ['memory_use_mb','value_total','value_pl','current_date','expmode','etype']
         df_prop = self.loadAdditionalData(prop_keys,self.exp_prop)
 
         #
@@ -272,6 +285,7 @@ class AlgorithmQuery(BufferedQueryInterface):
         dffinal = pd.merge(df_core, df_prop, how = 'left', left_on = 'experiment_id', right_on = 'experiment_id')
         dffinal = pd.merge(dffinal, df_exp, how = 'left', left_on = 'experiment_id', right_on = 'experiment_id')
         dffinal = dffinal.fillna(0)
+        #dffinal .loc[dffinal ['etype'] == "",'etype'] = "algorithm"
 
         #
         ## First, create the data
@@ -510,6 +524,7 @@ class AutotradesQuery(BufferedQueryInterface):
                                    password = conf.get( "advice_mongo_password", "paxuser43" ),
                                    authSource = conf.get( "advice_mongo_authSource", "fleetRover" ) )        
         self.em = self._settings['market_data'].getEm()
+        self.error = ""
 
     def load_data_buffer(self):
         print("LOADING")
@@ -528,7 +543,7 @@ class AutotradesQuery(BufferedQueryInterface):
             return
         try:
             # Query 
-            dataIn = self.em.get_data(experiment_id=eid,detail_days=days )
+            dataIn = self.em.get_data(experiment_id=eid)
             dataIn = dataIn[dataIn['current_date'].notnull()]
             dataIn = dataIn[dataIn['current_date'] < date_end]
             dataIn = dataIn[dataIn['current_date'] > date_start]
@@ -536,6 +551,7 @@ class AutotradesQuery(BufferedQueryInterface):
         except   Exception as e:
             import traceback
             traceback.print_exc()
+            self.error = str(e) 
             print (str(e))
             display(pd.DataFrame(dataIn))
             raise e

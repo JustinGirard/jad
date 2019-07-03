@@ -87,7 +87,7 @@ class LoadExperiment(ActionButton):
         from IPython.core.display import HTML
         print(HTML("<a href='"+link +"'>Edit '"+ids[0]+"' Here</a>"))
 
-class FinancialConsole(Dashboard):    
+class FinancialExperimentConsole(Dashboard):    
     
     
     def getControlArea(self):
@@ -142,7 +142,10 @@ class FinancialConsole(Dashboard):
         visuals = []
         button_defs = []
         datasources = []
-        datasources.append({'class':AutotradePerformanceTimeseries,'market_data':mdf,'datasource_id':'rttime','mode':'realtime'})                         
+        datasources.append({'class':AutotradePerformanceTimeseries,
+                            'market_data':mdf,
+                            'datasource_id':'rttime',
+                            'mode':'realtime'})                         
         visuals.append({'class':BokehTimeseriesGraphic,
                                 'title':'Live Profit Loss',
                                 'width':800,
@@ -167,7 +170,6 @@ class FinancialConsole(Dashboard):
                                              'label':'Account Value',
                                              'color':'black' }]
                                 })
-
         
         self.paper = InteractiveDataGroup({'datasources':datasources,
                 'visuals':visuals,
@@ -210,16 +212,17 @@ class FinancialConsole(Dashboard):
         
         datasources.append({'class':AlgorithmQuery,
                         'market_data':mdf,
-                        'datasource_id':'algselect'})
+                        'datasource_id':'algselect'
+                        })
         visuals.append({'class':ExperimentTable,
                         'width':800,
                         'height':300,
                         'date_keys':['last_contacted','current_date'],
                         'title':"Running Algorithms",
                         'hide':[],
-                        #'q_key':'status',
-                        #'q_value':'running',
-                        #'q_operator':'=',
+                        'q_key':'etype',
+                        'q_value':'experiment',
+                        'q_operator':'=',
                         'datasource_id':'algselect'
                        })
 
@@ -246,7 +249,6 @@ class FinancialConsole(Dashboard):
                         'commands':button_defs,
                          'datasource_targets':dst, #This is the group that any selection filters
                         })    
-        print(InteractiveDataGroup)
         #loadExp =  LoadExperiment({'label':"Load Experiment"})
         layoutList = []
         layoutList.append(self.getConsole([self.dw]))
