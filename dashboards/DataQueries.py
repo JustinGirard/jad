@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../../')
-
+sys.path.append('../')
 import datetime
 import pandas_datareader as pdr
 
@@ -26,7 +26,6 @@ import pymongo
 import random
 
 
-from financialNodes import MarketExperiment
 
 #
 #
@@ -37,6 +36,7 @@ class MarketDataFacade():
     facade = None
     def __init__(self, securities=None, start_date=None,end_date=None,cash=None,experiment_id=None):
         if securities:
+            from financialNodes import MarketExperiment
             self.me = MarketExperiment(securities,
                                start_date,
                                end_date,
@@ -50,9 +50,10 @@ class MarketDataFacade():
         username=conf.get("jef_mongo_username")
         password=conf.get("jef_mongo_password")
         authSource=conf.get("jef_mongo_authSource")
+        fullString=conf.get("jef_mongo_fullString")
 
         import pandas as pd
-        self.em = experiment_manager(mongo_server=host,mongo_db=dbname,port=port,username=username,password=password,authSource=authSource)
+        self.em = experiment_manager(fullString=fullString,mongo_server=host,mongo_db=dbname,port=port,username=username,password=password,authSource=authSource)
 
     def getMe(self):
         return self.me
