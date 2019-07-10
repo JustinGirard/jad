@@ -37,14 +37,12 @@ class JobStarterQuery(BufferedQueryInterface):
         username = conf.get( "jef_mongo_username", "pax_user" )
         password = conf.get( "jef_mongo_password", "paxuser43" )
         authSource = conf.get( "jef_mongo_authSource", "fleetRover" )
+        fullString  = conf.get( "jef_mongo_fullString", "" )
+        
         obj_database = conf.get( "jef_mongo_object_database", "fleetRover" )
         obj_collection = conf.get( "jef_mongo_jobstarter_collection", "jobstarter_properties" )
-        conn = {'mongo_server':host,
-                               'mongo_port':port,
-                               'mongo_username':username,
-                               'mongo_password':password,
-                               'mongo_authSource':authSource,
-                               'mongo_database':obj_database,
+        conn = {'mongo_database':obj_database,
+                               'mongo_fullString':fullString,
                                'mongo_collection':obj_collection,}
 
 
@@ -72,7 +70,8 @@ class JobStarterQuery(BufferedQueryInterface):
         jss = self.getJobStarterStatus()
         inst_list = self.getAwsInstances()
         leftList = inst_list.copy()
-        self.invincible_list = ["i-05e75507bcaf12912","i-0f912f5debf39abd3"]
+        self.invincible_list = conf.get( "jef_invincible_instances",         ["i-05e75507bcaf12912","i-0f912f5debf39abd3","i-0e59468b17f5ce981","i-097cd1634fefe937d"]
+ )
         
         #
         # Label and pre precess jobStarters
@@ -155,7 +154,7 @@ class JobStarterQuery(BufferedQueryInterface):
     def startInstance(self,indicesIn= None):
         import boto3
         import datetime
-        client = boto3.client('ec2')
+        client = boto3.client('ec2', region_name="us-west-2")
         response = client.request_spot_instances(
             DryRun=False,
             SpotPrice='0.10',
@@ -163,10 +162,10 @@ class JobStarterQuery(BufferedQueryInterface):
             InstanceCount=1,
             Type='one-time',
             LaunchSpecification={
-                'ImageId': 'ami-000fd9a518cfab156',
+                'ImageId': 'ami-0399d21ac0d362464',
                 'KeyName': 'default',
                 'SecurityGroups': ['default'],
-                'InstanceType': 't2.large',
+                'InstanceType': 't2.micro',
                 'Placement': {
                     'AvailabilityZone': 'us-west-2b',
                 },
