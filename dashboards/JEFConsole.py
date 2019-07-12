@@ -162,7 +162,7 @@ class JobStarterQuery(BufferedQueryInterface):
             InstanceCount=1,
             Type='one-time',
             LaunchSpecification={
-                'ImageId': 'ami-0856de1883827a299',
+                'ImageId': conf.get( "jef_worker_ami_id",'ami-04720b8267e966d65'),
                 'KeyName': 'default',
                 'SecurityGroups': ['default'],
                 'InstanceType': 't2.micro',
