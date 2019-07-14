@@ -166,6 +166,7 @@ class JobStarterQuery(BufferedQueryInterface):
                 'KeyName': 'default',
                 'SecurityGroups': ['default'],
                 'InstanceType': 't2.micro',
+                #'Name': conf.get( "jef_worker_ami_name",'Dev_worker_spot'),
                 'Placement': {
                     'AvailabilityZone': 'us-west-2b',
                 },
