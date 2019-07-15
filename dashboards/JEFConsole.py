@@ -155,6 +155,45 @@ class JobStarterQuery(BufferedQueryInterface):
         import boto3
         import datetime
         client = boto3.client('ec2', region_name="us-west-2")
+        import base64
+        launch_config = conf.get('launch_config')
+        if launch_config =='dev':
+            usr_string =b'''#!/bin/bash 
+            exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            echo BEGIN
+            date '+%Y-%m-%d %H:%M:%S'
+            
+            mkdir /mnt/dev
+            mount -t efs fs-5d4bd7f6:/ /mnt/dev
+            
+            cd /mnt/dev/dev/
+            nohup /mnt/dev/dev/paxworker/startup.sh'''
+        elif launch_config =='stage':
+            usr_string =b'''#!/bin/bash 
+            exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            echo BEGIN
+            date '+%Y-%m-%d %H:%M:%S'
+            mkdir /mnt/stage
+            mount -t efs fs-8bad3220:/ /mnt/stage
+
+            cd /mnt/stage/stage/
+            nohup /mnt/stage/stage/paxworker/startup-stage.sh'''
+
+        elif launch_config =='live':
+            usr_string =b'''#!/bin/bash 
+            exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            echo BEGIN
+            date '+%Y-%m-%d %H:%M:%S'
+
+            mkdir /mnt/live
+            mount -t efs fs-d3ac3378:/ /mnt/live
+
+            cd /mnt/live/live/
+            nohup /mnt/live/live/paxworker/startup-live.sh'''
+            
+        else:
+            raise Exception('Launch Configuration Not Supported')
+        user_data_enc = base64.b64encode(usr_string).decode("ascii")                   
         response = client.request_spot_instances(
             DryRun=False,
             SpotPrice='0.10',
@@ -162,6 +201,7 @@ class JobStarterQuery(BufferedQueryInterface):
             InstanceCount=1,
             Type='one-time',
             LaunchSpecification={
+                'UserData':user_data_enc,
                 'ImageId': conf.get( "jef_worker_ami_id",'ami-04720b8267e966d65'),
                 'KeyName': 'default',
                 'SecurityGroups': ['default'],
