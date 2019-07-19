@@ -77,8 +77,10 @@ class JobStarterQuery(BufferedQueryInterface):
         # Label and pre precess jobStarters
         for js in jss:
             for instanceId in inst_list:
-                if instanceId == js['instanceId']:
+                if 'instanceId' in js and instanceId == js['instanceId']:
                     leftList.remove(instanceId)
+                elif not 'instanceId' in js :
+                    js['instanceId'] = "-NotFound-"
             js['spot']= True
             if js['instanceId'] in self.invincible_list:
                 js['spot']= False
