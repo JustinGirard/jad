@@ -168,10 +168,11 @@ class JobStarterQuery(BufferedQueryInterface):
             mkdir /mnt/dev
             mount -t efs fs-5d4bd7f6:/ /mnt/dev
             
-            cd /mnt/dev/dev/
-            nohup /mnt/dev/dev/paxworker/startup.sh
-
             echo "00 */1 * * * root /mnt/dev/dev/paxworker/startup.sh" >>/etc/crontab
+            
+            cd /mnt/dev/dev/
+            nohup /mnt/dev/dev/paxworker/startup.sh &
+
 
             
             '''
@@ -183,10 +184,11 @@ class JobStarterQuery(BufferedQueryInterface):
             mkdir /mnt/stage
             mount -t efs fs-8bad3220:/ /mnt/stage
 
-            cd /mnt/stage/stage/
-            nohup /mnt/stage/stage/paxworker/startup-stage.sh
-
             echo "00 */1 * * * root /mnt/stage/stage/paxworker/startup-stage.sh" >>/etc/crontab
+            
+            cd /mnt/stage/stage/
+            nohup /mnt/stage/stage/paxworker/startup-stage.sh &
+
 
             
             '''
@@ -200,10 +202,11 @@ class JobStarterQuery(BufferedQueryInterface):
             mkdir /mnt/live
             mount -t efs fs-d3ac3378:/ /mnt/live
 
-            cd /mnt/live/live/
-            nohup /mnt/live/live/paxworker/startup-live.sh
-            
             echo "00 */1 * * * root /mnt/live/live/paxworker/startup-live.sh" >>/etc/crontab
+            
+            cd /mnt/live/live/
+            nohup /mnt/live/live/paxworker/startup-live.sh &
+            
             
             '''
             
