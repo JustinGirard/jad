@@ -186,7 +186,7 @@ class JobStarterQuery(BufferedQueryInterface):
             cd /mnt/stage/stage/
             nohup /mnt/stage/stage/paxworker/startup-stage.sh
 
-            echo "00 */1 * * * root /mnt/dev/dev/paxworker/startup-stage.sh" >>/etc/crontab
+            echo "00 */1 * * * root /mnt/stage/stage/paxworker/startup-stage.sh" >>/etc/crontab
 
             
             '''
@@ -203,7 +203,7 @@ class JobStarterQuery(BufferedQueryInterface):
             cd /mnt/live/live/
             nohup /mnt/live/live/paxworker/startup-live.sh
             
-            echo "00 */1 * * * root /mnt/dev/dev/paxworker/startup-live.sh" >>/etc/crontab
+            echo "00 */1 * * * root /mnt/live/live/paxworker/startup-live.sh" >>/etc/crontab
             
             '''
             
