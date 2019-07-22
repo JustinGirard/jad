@@ -168,7 +168,6 @@ class JobStarterQuery(BufferedQueryInterface):
             mkdir /mnt/dev
             mount -t efs fs-5d4bd7f6:/ /mnt/dev
             
-            echo "00 */1 * * * root /mnt/dev/dev/paxworker/startup.sh" >>/etc/crontab
             
             cd /mnt/dev/dev/
             nohup /mnt/dev/dev/paxworker/startup.sh &
@@ -184,7 +183,6 @@ class JobStarterQuery(BufferedQueryInterface):
             mkdir /mnt/stage
             mount -t efs fs-8bad3220:/ /mnt/stage
 
-            echo "00 */1 * * * root /mnt/stage/stage/paxworker/startup-stage.sh" >>/etc/crontab
             
             cd /mnt/stage/stage/
             nohup /mnt/stage/stage/paxworker/startup-stage.sh &
@@ -202,14 +200,14 @@ class JobStarterQuery(BufferedQueryInterface):
             mkdir /mnt/live
             mount -t efs fs-d3ac3378:/ /mnt/live
 
-            echo "00 */1 * * * root /mnt/live/live/paxworker/startup-live.sh" >>/etc/crontab
             
             cd /mnt/live/live/
             nohup /mnt/live/live/paxworker/startup-live.sh &
             
             
             '''
-            
+            #  echo "00 */1 * * * root /mnt/live/live/paxworker/startup-live.sh" >>/etc/crontab
+
         else:
             raise Exception('Launch Configuration Not Supported')
         user_data_enc = base64.b64encode(usr_string).decode("ascii")                   
