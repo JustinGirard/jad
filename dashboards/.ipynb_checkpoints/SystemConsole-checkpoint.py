@@ -22,8 +22,10 @@ except:
     from jef.jef.experiment_manager import experiment_manager
 from conf.conf import conf
 from bson import ObjectId
-import pymongo
-from pymongo import MongoClient
+import sys
+sys.path.append('../../')
+sys.path.append('../../../')
+from paxqueryengine.paxqueryengine import MongoCentralizedClient as MongoClient
 
 class ProcessQuery(BufferedQueryInterface):
     def load_data_buffer(self):
