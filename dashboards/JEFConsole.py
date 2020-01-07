@@ -98,14 +98,23 @@ class JobStarterQuery(BufferedQueryInterface):
             'memoryAverage': "Unknown",
             'log_type': "Unknown",   
             'imageId':"Unknown",
-            'print':"Unknown"
+            'print':"Unknown",
+            'aws_status':True,
             })
-        
-        #
+        #print('xxxxxxxxxxxxxx')
+        #print('xxxxxxxxxxxxxx')
+        #print('xxxxxxxxxxxxxx')
+        #print(jss)
+        #print('xxxxxxxxxxxxxx')
+        #print('xxxxxxxxxxxxxx')
+        #print('xxxxxxxxxxxxxx')
+
+
         # Remove stopped servers
         for i in reversed(range(0,len(jss))):
+            jss[i]['aws_status'] = True
             if jss[i]['instanceId'] not in inst_list:
-                jss.pop(i)
+                jss[i]['aws_status'] = False
         
         df = pd.DataFrame(jss)    
         '''
@@ -123,7 +132,8 @@ class JobStarterQuery(BufferedQueryInterface):
             'memoryAverage': [],
             'log_type': [],   
             'imageId':[],
-            'print':[]
+            'print':[],
+            'aws_status':[]
             }
         instanceIdList = list(df['instanceId'])
         all = True
@@ -137,23 +147,38 @@ class JobStarterQuery(BufferedQueryInterface):
                 if(all==True or instanceIdList[i] in self.get_filter_value('instanceId')):
                     self.data[k ].append(columnList[i])
 
-        
+        #print('--------------')
+        #print('--------------')
+        #print('--------------')
+        #print(self.data)
+        #print('--------------')
+        #print('--------------')
+        #print('--------------')
         self.registerAction('startInstance',JobStarterQuery.startInstance)
         self.registerAction('deleteInstance',JobStarterQuery.deleteInstance)    
     
     def deleteInstance(self,indicesIn= None):
         import boto3
         ec2 = boto3.resource("ec2", region_name="us-west-2")
+        inst_list = self.getAwsInstances()
+
+        # Remove stopped servers
+        #for i in reversed(range(0,len(jss))):
+        #    jss[i]['aws_status'] = True
+        #    if jss[i]['instanceId'] not in inst_list:
+        #        jss[i]['aws_status'] = False
+        
         if indicesIn:
             for iid in indicesIn:
-                print( 'Delete Instance ' + str(self.data['instanceId'][iid]))
-                if self.data['instanceId'][iid] in self.invincible_list:
-                    return print("Aborting. Do not select system instances")
-                if self.data['spot'][iid] != True:
-                    return print("Aborting. Do not delete non-spot instances.")
-                instance = ec2.Instance(self.data['instanceId'][iid])
-                instance.terminate()
-                print( 'TERMINATE SENT: ' + str(self.data['instanceId'][iid]))
+                if self.data['instanceId'][iid] in inst_list:
+                    print( 'Delete Instance ' + str(self.data['instanceId'][iid]))
+                    if self.data['instanceId'][iid] in self.invincible_list:
+                        return print("Aborting. Do not select system instances")
+                    if self.data['spot'][iid] != True:
+                        return print("Aborting. Do not delete non-spot instances.")
+                    instance = ec2.Instance(self.data['instanceId'][iid])
+                    instance.terminate()
+                    print( 'TERMINATE SENT: ' + str(self.data['instanceId'][iid]))
                 
     def startInstance(self,indicesIn= None):
         import boto3
