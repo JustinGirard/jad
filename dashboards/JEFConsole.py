@@ -249,7 +249,7 @@ class JobStarterQuery(BufferedQueryInterface):
                 'ImageId': conf.get( "jef_worker_ami_id",'ami-04720b8267e966d65'),
                 'KeyName': 'default',
                 'SecurityGroups': ['default'],
-                'InstanceType': 't2.micro',
+                'InstanceType': 't2.medium',
                 #'Name': conf.get( "jef_worker_ami_name",'Dev_worker_spot'),
                 'Placement': {
                     'AvailabilityZone': 'us-west-2b',
