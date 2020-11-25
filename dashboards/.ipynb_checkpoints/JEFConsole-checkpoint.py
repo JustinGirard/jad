@@ -159,7 +159,13 @@ class JobStarterQuery(BufferedQueryInterface):
     
     def deleteInstance(self,indicesIn= None):
         import boto3
-        ec2 = boto3.resource("ec2", region_name="us-west-2")
+        ec2 = boto3.resource("ec2", 
+                                aws_access_key_id=conf.get('aws_access_key_id','AKIA3JRUWJQOEAUZS2OD'),
+                                aws_secret_access_key=conf.get('aws_secret_access_key','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'),
+                                #aws_session_token=conf.get('aws_secret_access_key')                              
+                             
+                             
+                             region_name="us-west-2")
         inst_list = self.getAwsInstances()
 
         # Remove stopped servers
@@ -183,7 +189,11 @@ class JobStarterQuery(BufferedQueryInterface):
     def startInstance(self,indicesIn= None):
         import boto3
         import datetime
-        client = boto3.client('ec2', region_name="us-west-2")
+        client = boto3.client('ec2', 
+                                aws_access_key_id=conf.get('aws_access_key_id','AKIA3JRUWJQOEAUZS2OD'),
+                                aws_secret_access_key=conf.get('aws_secret_access_key','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'),
+                                #aws_session_token=conf.get('aws_secret_access_key')                              
+                              region_name="us-west-2")
         import base64
         launch_config = conf.get('launch_config')
         if launch_config =='dev':
@@ -283,7 +293,13 @@ class JobStarterQuery(BufferedQueryInterface):
     def getAwsInstances(self):
         inst = []
         import boto3
-        ec2 = boto3.resource("ec2", region_name="us-west-2")
+        ec2 = boto3.resource("ec2", 
+                             
+                                aws_access_key_id=conf.get('aws_access_key_id','AKIA3JRUWJQOEAUZS2OD'),
+                                aws_secret_access_key=conf.get('aws_secret_access_key','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'),
+                                #aws_session_token=conf.get('aws_secret_access_key')                              
+                             
+                             region_name="us-west-2")
         filters = [
             {
                 'Name': 'instance-state-name', 
