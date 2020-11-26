@@ -160,8 +160,8 @@ class JobStarterQuery(BufferedQueryInterface):
     def deleteInstance(self,indicesIn= None):
         import boto3
         ec2 = boto3.resource("ec2", 
-                                aws_access_key_id=conf.get('aws_access_key_id','AKIA3JRUWJQOEAUZS2OD'),
-                                aws_secret_access_key=conf.get('aws_secret_access_key','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'),
+                                aws_access_key_id=conf.get('aws_access_key_id'),
+                                aws_secret_access_key=conf.get('aws_secret_access_key'),
                                 #aws_session_token=conf.get('aws_secret_access_key')                              
                              
                              
@@ -190,8 +190,8 @@ class JobStarterQuery(BufferedQueryInterface):
         import boto3
         import datetime
         client = boto3.client('ec2', 
-                                aws_access_key_id=conf.get('aws_access_key_id','AKIA3JRUWJQOEAUZS2OD'),
-                                aws_secret_access_key=conf.get('aws_secret_access_key','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'),
+                                aws_access_key_id=conf.get('aws_access_key_id'),
+                                aws_secret_access_key=conf.get('aws_secret_access_key'),
                                 #aws_session_token=conf.get('aws_secret_access_key')                              
                               region_name="us-west-2")
         import base64
@@ -247,56 +247,93 @@ class JobStarterQuery(BufferedQueryInterface):
 
         else:
             raise Exception('Launch Configuration Not Supported')
-        user_data_enc = base64.b64encode(usr_string).decode("ascii")                   
-        response = client.request_spot_instances(
-            DryRun=False,
-            SpotPrice='0.10',
-            ClientToken='JEF_Process_3'+ str(datetime.datetime.now()),
-            InstanceCount=1,
-            Type='one-time',
-            LaunchSpecification={
-                'UserData':user_data_enc,
-                'ImageId': conf.get( "jef_worker_ami_id",'ami-04720b8267e966d65'),
-                'KeyName': 'default',
-                'SecurityGroups': ['default'],
-                'InstanceType': 't2.medium',
-                #'Name': conf.get( "jef_worker_ami_name",'Dev_worker_spot'),
-                'Placement': {
-                    'AvailabilityZone': 'us-west-2b',
-                },
-                #  'BlockDeviceMappings': [
-                #    {
-                #        'Ebs': {
-                #            'SnapshotId': 'snap-09338fdae684dbc5c',
-                #            'VolumeSize': 200,
-                #            'DeleteOnTermination': False,
-                #            'VolumeType': 'gp2',
-                #            #'Encrypted': False
-                #        },
-                #        'DeviceName':'/dev/sda1',
-                #    },
-                #],
+        user_data_enc = base64.b64encode(usr_string).decode("ascii")
+        
+        launch_type = 'full'
+        if launch_type == 'full':
+            response = client.run_instances(
+                BlockDeviceMappings=[
+                    {
+                        'DeviceName': '/dev/xvda',
+                        'Ebs': {
 
-                'EbsOptimized': False,
-                'Monitoring': {
-                    'Enabled': True
-                },
-                'SecurityGroupIds': [
+                            'DeleteOnTermination': True,
+                            #'VolumeSize': 8,
+                            #'VolumeType': 'gp2'
+                        },
+                    },
+                ],
+                UserData= user_data_enc,
+                KeyName= 'default',
+                Placement= {
+                        'AvailabilityZone': 'us-west-2b',},
+                                    
+                ImageId= conf.get( "jef_worker_ami_id"),
+                EbsOptimized= False,
+                Monitoring= {
+                        'Enabled': True
+                    },                
+                InstanceType='t3.medium',
+                MaxCount=1,
+                MinCount=1,
+                SecurityGroupIds=[
                     'sg-e4a8069f',
-                ]
-            }
-        )
-        print (response)
-        print ("SUBMITTED REQUEST TO AWS. PLEASE WAIT 5 MINUTES")
+                ],
+            )
+            print (response)
+            print ("SUBMITTED **FULL** REQUEST TO AWS. PLEASE WAIT 5 MINUTES")
+        else:
+            response = client.request_spot_instances(
+                DryRun=False,
+                SpotPrice='0.10',
+                ClientToken='JEF_Process_3'+ str(datetime.datetime.now()),
+                InstanceCount=1,
+                Type='one-time',
+                LaunchSpecification={
+                    'UserData':user_data_enc,
+                    'ImageId': conf.get( "jef_worker_ami_id"),
+                    'KeyName': 'default',
+                    'SecurityGroups': ['default'],
+                    'InstanceType': 't2.medium',
+                    #'Name': conf.get( "jef_worker_ami_name",'Dev_worker_spot'),
+                    'Placement': {
+                        'AvailabilityZone': 'us-west-2b',
+                    },
+                    #  'BlockDeviceMappings': [
+                    #    {
+                    #        'Ebs': {
+                    #            'SnapshotId': 'snap-09338fdae684dbc5c',
+                    #            'VolumeSize': 200,
+                    #            'DeleteOnTermination': False,
+                    #            'VolumeType': 'gp2',
+                    #            #'Encrypted': False
+                    #        },
+                    #        'DeviceName':'/dev/sda1',
+                    #    },
+                    #],
+
+                    'EbsOptimized': False,
+                    'Monitoring': {
+                        'Enabled': True
+                    },
+                    'SecurityGroupIds': [
+                        'sg-e4a8069f',
+                    ]
+                }
+            )
+            print (response)
+            print ("SUBMITTED SPOT REQUEST TO AWS. PLEASE WAIT 5 MINUTES")
     
 
     def getAwsInstances(self):
         inst = []
         import boto3
+        print(conf.get('aws_access_key_id'))
+        print(conf.get('aws_secret_access_key'))
         ec2 = boto3.resource("ec2", 
                              
-                                aws_access_key_id=conf.get('aws_access_key_id','AKIA3JRUWJQOEAUZS2OD'),
-                                aws_secret_access_key=conf.get('aws_secret_access_key','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'),
+                                aws_access_key_id=conf.get('aws_access_key_id'),
+                                aws_secret_access_key=conf.get('aws_secret_access_key'),
                                 #aws_session_token=conf.get('aws_secret_access_key')                              
                              
                              region_name="us-west-2")
