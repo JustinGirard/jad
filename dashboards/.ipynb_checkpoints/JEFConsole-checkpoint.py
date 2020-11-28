@@ -249,7 +249,7 @@ class JobStarterQuery(BufferedQueryInterface):
             raise Exception('Launch Configuration Not Supported')
         user_data_enc = base64.b64encode(usr_string).decode("ascii")
         
-        launch_type = 'full'
+        launch_type = 'spot'
         if launch_type == 'full':
             response = client.run_instances(
                 BlockDeviceMappings=[
