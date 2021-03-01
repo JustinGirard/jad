@@ -249,7 +249,7 @@ class JobStarterQuery(BufferedQueryInterface):
             raise Exception('Launch Configuration Not Supported')
         user_data_enc = base64.b64encode(usr_string).decode("ascii")
         
-        launch_type = 'spot'
+        launch_type = 'full'
         if launch_type == 'full':
             response = client.run_instances(
                 BlockDeviceMappings=[
@@ -273,7 +273,7 @@ class JobStarterQuery(BufferedQueryInterface):
                 Monitoring= {
                         'Enabled': True
                     },                
-                InstanceType='t3.medium',
+                InstanceType='t2.medium',
                 MaxCount=1,
                 MinCount=1,
                 SecurityGroupIds=[
@@ -297,7 +297,7 @@ class JobStarterQuery(BufferedQueryInterface):
                     'InstanceType': 't2.medium',
                     #'Name': conf.get( "jef_worker_ami_name",'Dev_worker_spot'),
                     'Placement': {
-                        'AvailabilityZone': 'us-west-2b',
+                        'AvailabilityZone': 'us-west-2b',#'us-west-2b'
                     },
                     #  'BlockDeviceMappings': [
                     #    {
