@@ -249,7 +249,7 @@ class JobStarterQuery(BufferedQueryInterface):
             raise Exception('Launch Configuration Not Supported')
         user_data_enc = base64.b64encode(usr_string).decode("ascii")
         
-        launch_type = 'spot'
+        launch_type = 'full'
         if launch_type == 'full':
             response = client.run_instances(
                 BlockDeviceMappings=[
@@ -285,7 +285,7 @@ class JobStarterQuery(BufferedQueryInterface):
         else:
             response = client.request_spot_instances(
                 DryRun=False,
-                SpotPrice='0.10',
+                SpotPrice='0.10', #0.0139
                 ClientToken='JEF_Process_3'+ str(datetime.datetime.now()),
                 InstanceCount=1,
                 Type='one-time',
